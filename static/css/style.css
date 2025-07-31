@@ -15,4 +15,30 @@ body {
   .btn-primary:hover {
     background-color: #005f87;
   }
+/* style.css */
+.hero {
+    background-image: url('../images/parking-bg.jpg');
+    background-size: cover;
+    background-position: center;
+    height: 90vh;
+    color: white;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    padding: 20px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.hero h1 {
+    font-size: 2.8rem;
+    margin: 0;
+}
+
+.hero p {
+    font-size: 1.2rem;
+    margin-top: 10px;
+}
   
