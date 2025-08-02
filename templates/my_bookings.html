@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <title>My Bookings - ParkEasy</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
@@ -10,7 +11,7 @@
       background: white;
       border-radius: 10px;
       padding: 20px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
     table {
@@ -19,7 +20,8 @@
       margin-top: 15px;
     }
 
-    th, td {
+    th,
+    td {
       padding: 10px;
       border-bottom: 1px solid #ddd;
       text-align: left;
@@ -43,40 +45,66 @@
     }
   </style>
 </head>
+
 <body>
   <div class="results">
     <h2>🗂 My Bookings</h2>
 
     {% if bookings|length == 0 %}
-      <p>No bookings found.</p>
+    <p>No bookings found.</p>
     {% else %}
-      <table>
-        <thead>
-          <tr>
-            <th>Ticket No</th>
-            <th>Location</th>
-            <th>Date</th>
-            <th>Time</th>
-            <th>Duration</th>
-            <th>Price (€)</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for b in bookings %}
-          <tr>
-            <td class="ticket">{{ b.ticket_number }}</td>
-            <td>{{ b.spot_name }}</td>
-            <td>{{ b.date }}</td>
-            <td>{{ b.time }}</td>
-            <td>{{ b.duration_hours }} hour(s)</td>
-            <td>{{ b.total_price_eur }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+    <table>
+      <thead>
+        <tr>
+          <th>Ticket No</th>
+          <th>Location</th>
+          <th>Date</th>
+          <th>Time</th>
+          <th>Duration</th>
+          <th>Price (€)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for b in bookings %}
+        <tr>
+          <td class="ticket">{{ b.ticket_number }}</td>
+          <td>{{ b.spot_name }}</td>
+          <td>{{ b.date }}</td>
+          <td>{{ b.time }}</td>
+          <td>{{ b.duration_hours }} hour(s)</td>
+          <td>{{ b.total_price_eur }}</td>
+          <td style="white-space: nowrap;">
+            {% if b.status == 'Cancelled' %}
+            <span style="color: red;">❌ Cancelled</span>
+            {% else %}
+            <span style="color: green; margin-right: 8px;">✅ Confirmed</span>
+            <form action="/cancel-booking" method="POST" style="display:inline;" onsubmit="return confirmCancel(this);">
+              <input type="hidden" name="ticket_number" value="{{ b.ticket_number }}">
+              <button type="submit"
+                style="background-color:#ff4d4d;color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;">
+                Cancel
+              </button>
+            </form>
+            {% endif %}
+          </td>
+
+
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
     {% endif %}
 
     <a class="back-link" href="/">← Back to Home</a>
   </div>
+
+  <script>
+    function confirmCancel(form) {
+      const ticket = form.ticket_number.value;
+      return confirm(`Are you sure you want to cancel booking ${ticket}?`);
+    }
+  </script>
+
 </body>
+
 </html>

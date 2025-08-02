@@ -170,6 +170,7 @@ def book():
         'time': time,
         'duration_hours': hours,
         'total_price_eur': total_price,
+         'status': 'Confirmed',  
         'timestamp': datetime.utcnow()
     })
 
@@ -259,6 +260,26 @@ def my_bookings():
 
     return render_template('my_bookings.html', bookings=bookings)
 
+#cancel booking 
+@app.route('/cancel-booking', methods=['POST'])
+def cancel_booking():
+    if 'email' not in session:
+        return redirect('/login')
+
+    ticket_number = request.form.get('ticket_number')
+    user_email = session['email']
+
+    result = mongo.db.bookings.update_one(
+        {'ticket_number': ticket_number, 'user': user_email},
+        {'$set': {'status': 'Cancelled'}}
+    )
+
+    if result.modified_count == 1:
+        print(f"🟥 Booking {ticket_number} cancelled.")
+    else:
+        print(f"⚠️ Booking not found or not updated.")
+
+    return redirect('/my-bookings')
 
 #Admin Dashboard
 @app.route('/admin-dashboard')
