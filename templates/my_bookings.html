@@ -3,23 +3,80 @@
 <head>
   <title>My Bookings - ParkEasy</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+  <style>
+    .results {
+      max-width: 800px;
+      margin: 30px auto;
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    th {
+      background-color: #f5f5f5;
+      font-weight: 600;
+    }
+
+    .ticket {
+      font-weight: bold;
+      color: #1e88e5;
+    }
+
+    .back-link {
+      margin-top: 20px;
+      display: inline-block;
+      color: purple;
+    }
+  </style>
 </head>
 <body>
   <div class="results">
     <h2>🗂 My Bookings</h2>
+
     {% if bookings|length == 0 %}
       <p>No bookings found.</p>
     {% else %}
-      <ul>
-        {% for b in bookings %}
-          <li>
-            <strong>{{ b.ticket_number }}</strong> – {{ b.spot_name }} –
-            {{ b.date }} @ {{ b.time }} ({{ b.duration_hours }}h, €{{ b.total_price_eur }})
-          </li>
-        {% endfor %}
-      </ul>
+      <table>
+        <thead>
+          <tr>
+            <th>Ticket No</th>
+            <th>Location</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Duration</th>
+            <th>Price (€)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in bookings %}
+          <tr>
+            <td class="ticket">{{ b.ticket_number }}</td>
+            <td>{{ b.spot_name }}</td>
+            <td>{{ b.date }}</td>
+            <td>{{ b.time }}</td>
+            <td>{{ b.duration_hours }} hour(s)</td>
+            <td>{{ b.total_price_eur }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     {% endif %}
-    <a href="/">← Back to Home</a>
+
+    <a class="back-link" href="/">← Back to Home</a>
   </div>
 </body>
 </html>
