@@ -25,39 +25,45 @@
   <!-- SEARCH -->
   <section class="search-bar">
     <form action="/" method="POST">
-      <select name="mode" required>
-        <option value="hourly">Hourly</option>
-        <option value="monthly">Monthly</option>
+
+      <select name="mode">
+
+        <option value="all">Show All</option>
+        <option value="available">Available Only</option>
+        <option value="full">Full Only</option>
       </select>
 
-        <!-- Updated: dropdown-enabled input -->
-      <input list="locations" id="search-input" name="location" placeholder="Start typing a location..." autocomplete="off" required>
+      <!-- Updated: dropdown-enabled input -->
+      <input list="locations" id="search-input" name="location" placeholder="Start typing a location..."
+        autocomplete="off" required>
       <datalist id="locations">
         {% for spot in all_spots %}
-          <option value="{{ spot.spot_name }}"></option>
+        <option value="{{ spot.spot_name }}"></option>
         {% endfor %}
       </datalist>
 
       <input type="time" name="time" required>
       <input type="date" name="date" required>
       <button type="submit">Search Now</button>
+      <button type="button" onclick="window.location.href='/'" style="margin-left: 10px;">Reset</button>
     </form>
   </section>
 
-{% if results %}
-<section class="results">
-  <div class="results-header">
-    <h2 style="display:inline-block;">Available Parking Options</h2>
-    <button id="toggle-list" style="float:right;">Hide List</button>
-  </div>
-  <p>Mode: {{ mode }} | Location: {{ location }} | Date: {{ date }} | Time: {{ time }}</p>
-  <ul id="result-list">
-    {% for spot in results %}
-    <li><strong>{{ spot.spot_name }}</strong> – {{ spot.availability }} – Lat: {{ spot.lat }}, Lon: {{ spot.lon }}</li>
-    {% endfor %}
-  </ul>
-</section>
-{% endif %}
+  {% if results %}
+  <section class="results">
+    <div class="results-header">
+      <h2 style="display:inline-block;">Available Parking Options</h2>
+      <button id="toggle-list" style="float:right;">Hide List</button>
+    </div>
+    <p>Mode: {{ mode }} | Location: {{ location }} | Date: {{ date }} | Time: {{ time }}</p>
+    <ul id="result-list">
+      {% for spot in results %}
+      <li><strong>{{ spot.spot_name }}</strong> – {{ spot.availability }} – Lat: {{ spot.lat }}, Lon: {{ spot.lon }}
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
 
 
   <header class="hero-section">
@@ -70,7 +76,8 @@
 
   <section class="info-section" id="about">
     <h4>About Us</h4>
-    <p>ParkEasy is a smart parking web application helping users in Dublin to locate and book parking spaces with ease using real-time data and prediction models.</p>
+    <p>ParkEasy is a smart parking web application helping users in Dublin to locate and book parking spaces with ease
+      using real-time data and prediction models.</p>
   </section>
 
   <section class="info-section" id="contact">
@@ -88,31 +95,61 @@
   {{ results | tojson | safe }}
 </script>
 
-<script id="all-spots-data" type="application/json">
+  <script id="all-spots-data" type="application/json">
   {{ all_spots | tojson | safe }}
 </script>
 
-<script>
-  const parkingResults = JSON.parse(document.getElementById('parking-data').textContent);
-  const allSpots = JSON.parse(document.getElementById('all-spots-data').textContent);
-  console.log("📦 parkingResults:", parkingResults);
-  console.log("📍 allSpots:", allSpots);
-</script>
+  <script>
+    const parkingResults = JSON.parse(document.getElementById('parking-data').textContent);
+    const allSpots = JSON.parse(document.getElementById('all-spots-data').textContent);
+    console.log("📦 parkingResults:", parkingResults);
+    console.log("📍 allSpots:", allSpots);
+  </script>
 
-<script>
-  const toggleBtn = document.getElementById("toggle-list");
-  const list = document.getElementById("result-list");
+  <script>
+    const toggleBtn = document.getElementById("toggle-list");
+    const list = document.getElementById("result-list");
 
-  if (toggleBtn && list) {
-    toggleBtn.addEventListener("click", () => {
-      const isVisible = list.style.display !== "none";
-      list.style.display = isVisible ? "none" : "block";
-      toggleBtn.textContent = isVisible ? "Show List" : "Hide List";
-    });
-  }
-</script>
+    if (toggleBtn && list) {
+      toggleBtn.addEventListener("click", () => {
+        const isVisible = list.style.display !== "none";
+        list.style.display = isVisible ? "none" : "block";
+        toggleBtn.textContent = isVisible ? "Show List" : "Hide List";
+      });
+    }
+  </script>
 
-
+  <!-- Booking Modal -->
+  <div id="booking-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="document.getElementById('booking-modal').style.display='none'">&times;</span>
+      <h3>Book Parking Spot</h3>
+      <form action="/book" method="POST">
+        <label>Your Name:</label>
+        <input type="text" name="customer_name" required><br><br>
+        <label>Location:</label>
+        <input type="text" id="booking-spot-name" name="spot_name" readonly><br><br>
+        <label>Date:</label>
+        <input type="date" name="date" required><br><br>
+        <label>Time:From</label>
+        <input type="time" name="time" required><br><br>
+        <label>Duration (Hours):</label>
+        <select name="hours" required>
+          {% for h in range(1, 11) %}
+          <option value="{{ h }}">{{ h }} Hour(s)</option>
+          {% endfor %}
+        </select><br><br>
+        <button type="submit">Confirm Booking</button>
+      </form>
+    </div>
+  </div>
+  <script>
+    function submitBooking(e) {
+      e.preventDefault();
+      alert("✅ Booking confirmed!");
+      document.getElementById("booking-modal").style.display = "none";
+    }
+  </script>
 
   <script src="{{ url_for('static', filename='js/search.js') }}"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

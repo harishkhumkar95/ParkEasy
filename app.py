@@ -6,6 +6,7 @@
 import csv
 import os
 from pathlib import Path
+from flask_mail import Mail, Message
 
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from flask_pymongo import PyMongo
@@ -16,6 +17,16 @@ import bcrypt
 # --------------------------------------------
 app = Flask(__name__)
 app.secret_key = 'p@rke@sy2025'
+# ✅ Flask-Mail Configuration
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'harishkhumkar95@gmail.com'         # ⬅️ Your Gmail
+app.config['MAIL_PASSWORD'] = 'yiulkdccmaurooce'            # ⬅️ App Password (not your real Gmail password)
+app.config['MAIL_DEFAULT_SENDER'] = 'harishkumkar2014@gmail.com'   # ⬅️ Same as username
+
+mail = Mail(app)
+
 
 # --------------------------------------------
 # Load Parking Data into memory (lat/lon ready)
@@ -50,7 +61,9 @@ csv_file_path = Path(__file__).parent / 'Dublin_City_Centre_Accessible_Parking_2
 # Load Parking Data with coordinate validation
 # --------------------------------------------
 PARKING_DATA = []
-csv_file_path = Path(__file__).parent / 'Dublin_City_Centre_Accessible_Parking_2021.csv'
+# csv_file_path = Path(__file__).parent / 'Dublin_City_Centre_Accessible_Parking_2021.csv'
+csv_file_path = Path(__file__).parent / 'Cleaned_Parking_Dublin_V2.csv'
+
 
 if csv_file_path.exists():
     try:
@@ -132,6 +145,113 @@ def home():
         email=session['email'],
         results=PARKING_DATA,      # map will use this
         all_spots=PARKING_DATA     # dropdown will use this
+    )
+
+from datetime import datetime
+
+import random
+from datetime import datetime
+
+
+# @app.route('/test-email')
+# def test_email():
+#     try:
+#         msg = Message("🚀 ParkEasy Email Test", recipients=["your_email@gmail.com"])
+#         msg.body = "This is a test email sent from your Flask app."
+#         mail.send(msg)
+#         return "✅ Test email sent successfully!"
+#     except Exception as e:
+#         import traceback
+#         traceback.print_exc()
+#         return f"❌ Test email failed: {e}"
+    
+@app.route('/book', methods=['POST'])
+def book():
+    customer_name = request.form.get('customer_name')
+    spot_name = request.form.get('spot_name')
+    date = request.form.get('date')
+    time = request.form.get('time')
+    hours = int(request.form.get('hours', 1))
+    user_email = session.get('email', 'guest')
+
+    if not all([customer_name, spot_name, date, time]):
+        return "❌ Missing booking data", 400
+
+    # Generate ticket
+    ticket_number = f"TKT{datetime.now().strftime('%H%M%S')}{random.randint(100, 999)}"
+    total_price = 2  # Flat rate
+
+    # Store in MongoDB
+    bookings = mongo.db.bookings
+    bookings.insert_one({
+        'ticket_number': ticket_number,
+        'customer_name': customer_name,
+        'user': user_email,
+        'spot_name': spot_name,
+        'date': date,
+        'time': time,
+        'duration_hours': hours,
+        'total_price_eur': total_price,
+        'timestamp': datetime.utcnow()
+    })
+
+    # ✅ Send Email Confirmation
+    try:
+        msg = Message(f"Your ParkEasy Booking: {ticket_number}", recipients=[user_email])
+        msg.body = f"""
+Hi {customer_name},
+
+Your parking booking is confirmed! 🎉
+
+📍 Spot: {spot_name}
+📅 Date: {date}
+⏰ Time: {time}
+⏳ Duration: {hours} hour(s)
+🎫 Ticket No: {ticket_number}
+💶 Total: €{total_price}
+
+Thank you for using ParkEasy!
+        """
+        mail.send(msg)
+        print("📧 Booking confirmation email sent.")
+    except Exception as e:
+        print(f"❌ Failed to send email: {e}")
+
+    return render_template(
+        'booking_confirmation.html',
+        ticket=ticket_number,
+        customer=customer_name,
+        spot=spot_name,
+        date=date,
+        time=time,
+        hours=hours,
+        total=total_price
+    )
+
+
+    # Save to MongoDB
+    bookings = mongo.db.bookings
+    bookings.insert_one({
+        'ticket_number': ticket_number,
+        'customer_name': customer_name,
+        'user': user_email,
+        'spot_name': spot_name,
+        'date': date,
+        'time': time,
+        'duration_hours': hours,
+        'total_price_eur': total_price,
+        'timestamp': datetime.utcnow()
+    })
+
+    return render_template(
+        'booking_confirmation.html',
+        ticket=ticket_number,
+        customer=customer_name,
+        spot=spot_name,
+        date=date,
+        time=time,
+        hours=hours,
+        total=total_price
     )
 
 
