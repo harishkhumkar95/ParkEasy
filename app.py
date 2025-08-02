@@ -7,7 +7,8 @@ import csv
 import os
 from pathlib import Path
 from flask_mail import Mail, Message
-
+from reportlab.pdfgen import canvas
+from io import BytesIO
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from flask_pymongo import PyMongo
 import bcrypt
@@ -198,22 +199,56 @@ def book():
     # ✅ Send Email Confirmation
     try:
         msg = Message(f"Your ParkEasy Booking: {ticket_number}", recipients=[user_email])
-        msg.body = f"""
-Hi {customer_name},
 
-Your parking booking is confirmed! 🎉
+        # Render HTML template
+        msg.html = render_template(
+            'email_receipt.html',
+            customer_name=customer_name,
+            spot_name=spot_name,
+            date=date,
+            time=time,
+            hours=hours,
+            ticket_number=ticket_number,
+            total=total_price
+        )
 
-📍 Spot: {spot_name}
-📅 Date: {date}
-⏰ Time: {time}
-⏳ Duration: {hours} hour(s)
-🎫 Ticket No: {ticket_number}
-💶 Total: €{total_price}
+        # Optional plain text fallback
+        msg.body = f"""Hi {customer_name},
+
+Your parking booking is confirmed!
+
+Spot: {spot_name}
+Date: {date}
+Time: {time}
+Duration: {hours} hour(s)
+Ticket No: {ticket_number}
+Total: €{total_price}
 
 Thank you for using ParkEasy!
         """
+  # ✅ Generate PDF receipt
+        pdf_buffer = BytesIO()
+        c = canvas.Canvas(pdf_buffer)
+        c.setFont("Helvetica", 12)
+        c.drawString(100, 800, "ParkEasy Booking Receipt")
+        c.drawString(100, 780, f"Customer: {customer_name}")
+        c.drawString(100, 760, f"Spot: {spot_name}")
+        c.drawString(100, 740, f"Date: {date}")
+        c.drawString(100, 720, f"Time: {time}")
+        c.drawString(100, 700, f"Hours: {hours}")
+        c.drawString(100, 680, f"Ticket No: {ticket_number}")
+        c.drawString(100, 660, f"Total: €{total_price}")
+        c.save()
+        pdf_buffer.seek(0)
+
+        msg.attach(
+            filename=f"ParkEasy_Receipt_{ticket_number}.pdf",
+            content_type="application/pdf",
+            data=pdf_buffer.read()
+        )
         mail.send(msg)
         print("📧 Booking confirmation email sent.")
+
     except Exception as e:
         print(f"❌ Failed to send email: {e}")
 
@@ -228,32 +263,41 @@ Thank you for using ParkEasy!
         total=total_price
     )
 
+#my booking history
+@app.route('/my-bookings')
+def my_bookings():
+    if 'email' not in session:
+        return redirect('/login')
 
-    # Save to MongoDB
-    bookings = mongo.db.bookings
-    bookings.insert_one({
-        'ticket_number': ticket_number,
-        'customer_name': customer_name,
-        'user': user_email,
-        'spot_name': spot_name,
-        'date': date,
-        'time': time,
-        'duration_hours': hours,
-        'total_price_eur': total_price,
-        'timestamp': datetime.utcnow()
-    })
+    user_email = session['email']
+    bookings = mongo.db.bookings.find({'user': user_email}).sort('timestamp', -1)
 
-    return render_template(
-        'booking_confirmation.html',
-        ticket=ticket_number,
-        customer=customer_name,
-        spot=spot_name,
-        date=date,
-        time=time,
-        hours=hours,
-        total=total_price
-    )
+    return render_template('my_bookings.html', bookings=bookings)
 
+#Admin Dashboard
+@app.route('/admin-dashboard')
+def admin_dashboard():
+    from datetime import datetime, timedelta
+    if 'email' not in session:
+        return redirect('/login')
+
+    # Restrict to your admin email
+    if session['email'] != 'youradmin@email.com':
+        return "❌ Access denied", 403
+
+    today = datetime.utcnow().date()
+    bookings = mongo.db.bookings.find()
+    
+    daily_count = {}
+    hourly_count = {}
+
+    for b in bookings:
+        day = b['timestamp'].strftime('%Y-%m-%d')
+        hour = b['timestamp'].strftime('%H:00')
+        daily_count[day] = daily_count.get(day, 0) + 1
+        hourly_count[hour] = hourly_count.get(hour, 0) + 1
+
+    return render_template('admin_dashboard.html', daily=daily_count, hourly=hourly_count)
 
 
 # --------------------------------------------
