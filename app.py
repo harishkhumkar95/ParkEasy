@@ -36,30 +36,7 @@ PARKING_DATA = []
 csv_file_path = Path(__file__).parent / 'Dublin_City_Centre_Accessible_Parking_2021.csv'
 
 
-# if csv_file_path.exists():
-#     try:
-#         with open(csv_file_path, newline='', encoding='ISO-8859-1') as csvfile:
-#             reader = csv.DictReader(csvfile)
-#             for row in reader:
-#                 if row['lat'] and row['lon']:
-#                     PARKING_DATA.append({
-#                         'spot_name': row['spot_name'],
-#                         'availability': row['availability'],
-#                         'lat': float(row['lat']),
-#                         'lon': float(row['lon'])
-#                     })
 
-#         print(f"✅ Loaded {len(PARKING_DATA)} parking spots.")
-#         for spot in PARKING_DATA[:3]:
-#             print("📍 Example spot:", spot['spot_name'])
-
-#     except Exception as e:
-#         print(f"❌ Error reading CSV: {e}")
-# else:
-#     print("⚠️ Parking CSV not found!")
-
-# --------------------------------------------
-# Load Parking Data with coordinate validation
 # --------------------------------------------
 PARKING_DATA = []
 # csv_file_path = Path(__file__).parent / 'Dublin_City_Centre_Accessible_Parking_2021.csv'
@@ -226,6 +203,14 @@ Total: €{total_price}
 
 Thank you for using ParkEasy!
         """
+        mongo.db.emails.insert_one({
+    'to': user_email,
+    'subject': msg.subject,
+    'body': msg.body,
+    'html': msg.html,
+    'sent_at': datetime.utcnow(),
+    'ticket': ticket_number
+    })
   # ✅ Generate PDF receipt
         pdf_buffer = BytesIO()
         c = canvas.Canvas(pdf_buffer)
@@ -270,9 +255,10 @@ def my_bookings():
         return redirect('/login')
 
     user_email = session['email']
-    bookings = mongo.db.bookings.find({'user': user_email}).sort('timestamp', -1)
+    bookings = list(mongo.db.bookings.find({'user': user_email}).sort('timestamp', -1))
 
     return render_template('my_bookings.html', bookings=bookings)
+
 
 #Admin Dashboard
 @app.route('/admin-dashboard')
@@ -282,7 +268,7 @@ def admin_dashboard():
         return redirect('/login')
 
     # Restrict to your admin email
-    if session['email'] != 'youradmin@email.com':
+    if session['email'] != 'harishkhumkar95@gmail.com':
         return "❌ Access denied", 403
 
     today = datetime.utcnow().date()
