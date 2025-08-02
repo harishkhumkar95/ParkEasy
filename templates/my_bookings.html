@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My Bookings - ParkEasy</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+</head>
+<body>
+  <div class="results">
+    <h2>🗂 My Bookings</h2>
+    {% if bookings|length == 0 %}
+      <p>No bookings found.</p>
+    {% else %}
+      <ul>
+        {% for b in bookings %}
+          <li>
+            <strong>{{ b.ticket_number }}</strong> – {{ b.spot_name }} –
+            {{ b.date }} @ {{ b.time }} ({{ b.duration_hours }}h, €{{ b.total_price_eur }})
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+    <a href="/">← Back to Home</a>
+  </div>
+</body>
+</html>
