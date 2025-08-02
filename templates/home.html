@@ -1,15 +1,17 @@
+<!-- ✅ FULLY FIXED home.html -->
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ParkEasy | Home</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
-<body>
 
-  <!-- NAVBAR -->
+<body>
   <nav class="navbar">
     <div class="logo">Park<span class="highlight">Easy</span></div>
     <ul class="nav-links">
@@ -20,47 +22,101 @@
     </ul>
   </nav>
 
-
-
-
   <!-- SEARCH -->
   <section class="search-bar">
-    <select>
-      <option>Hourly</option>
-      <option>Monthly</option>
-    </select>
-    <input type="text" placeholder="Address, Place, City or Zip Code">
-    <input type="time">
-    <button>Search Now</button>
+    <form action="/" method="POST">
+      <select name="mode" required>
+        <option value="hourly">Hourly</option>
+        <option value="monthly">Monthly</option>
+      </select>
+
+        <!-- Updated: dropdown-enabled input -->
+      <input list="locations" id="search-input" name="location" placeholder="Start typing a location..." autocomplete="off" required>
+      <datalist id="locations">
+        {% for spot in all_spots %}
+          <option value="{{ spot.spot_name }}"></option>
+        {% endfor %}
+      </datalist>
+
+      <input type="time" name="time" required>
+      <input type="date" name="date" required>
+      <button type="submit">Search Now</button>
+    </form>
   </section>
- <!-- HERO -->
-<header class="hero-section">
-  <div class="hero-text centered">
-    <h1>Find Amazing Parking Space Near You</h1>
-    <p>Book your slot easily with real-time data prediction in Dublin.</p>
-    <a href="#" class="cta-button">Show Parking Spaces</a>
+
+{% if results %}
+<section class="results">
+  <div class="results-header">
+    <h2 style="display:inline-block;">Available Parking Options</h2>
+    <button id="toggle-list" style="float:right;">Hide List</button>
   </div>
-</header>
+  <p>Mode: {{ mode }} | Location: {{ location }} | Date: {{ date }} | Time: {{ time }}</p>
+  <ul id="result-list">
+    {% for spot in results %}
+    <li><strong>{{ spot.spot_name }}</strong> – {{ spot.availability }} – Lat: {{ spot.lat }}, Lon: {{ spot.lon }}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
 
-  
 
-  <!-- ABOUT -->
+  <header class="hero-section">
+    <div class="hero-text centered">
+      <h1>Find Amazing Parking Space Near You</h1>
+      <p>Book your slot easily with real-time data prediction in Dublin.</p>
+      <a href="#" class="cta-button">Show Parking Spaces</a>
+    </div>
+  </header>
+
   <section class="info-section" id="about">
     <h4>About Us</h4>
     <p>ParkEasy is a smart parking web application helping users in Dublin to locate and book parking spaces with ease using real-time data and prediction models.</p>
   </section>
 
-  <!-- CONTACT -->
   <section class="info-section" id="contact">
     <h4>Contact</h4>
     <p>Email: support@parkeasy.com</p>
     <p>Phone: +353 123 456 789</p>
   </section>
 
-  <!-- FOOTER -->
   <footer class="footer">
     <p>© 2025 ParkEasy | All Rights Reserved</p>
   </footer>
 
+  <!-- ✅ Fix JS variables correctly -->
+  <script id="parking-data" type="application/json">
+  {{ results | tojson | safe }}
+</script>
+
+<script id="all-spots-data" type="application/json">
+  {{ all_spots | tojson | safe }}
+</script>
+
+<script>
+  const parkingResults = JSON.parse(document.getElementById('parking-data').textContent);
+  const allSpots = JSON.parse(document.getElementById('all-spots-data').textContent);
+  console.log("📦 parkingResults:", parkingResults);
+  console.log("📍 allSpots:", allSpots);
+</script>
+
+<script>
+  const toggleBtn = document.getElementById("toggle-list");
+  const list = document.getElementById("result-list");
+
+  if (toggleBtn && list) {
+    toggleBtn.addEventListener("click", () => {
+      const isVisible = list.style.display !== "none";
+      list.style.display = isVisible ? "none" : "block";
+      toggleBtn.textContent = isVisible ? "Show List" : "Hide List";
+    });
+  }
+</script>
+
+
+
+  <script src="{{ url_for('static', filename='js/search.js') }}"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="{{ url_for('static', filename='js/map.js') }}"></script>
 </body>
+
 </html>

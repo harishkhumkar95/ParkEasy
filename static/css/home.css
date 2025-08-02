@@ -93,3 +93,43 @@ body {
     padding: 10px 25px;
     cursor: pointer;
 }
+
+.results {
+  background-color: #fefefe;
+  margin: 40px auto;
+  padding: 30px 50px;
+  max-width: 700px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+.results h2 {
+  color: #0066FF;
+  margin-bottom: 15px;
+}
+.results ul {
+  list-style: none;
+  padding-left: 0;
+}
+.results li {
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+
+.autocomplete-box {
+  background: white;
+  border: 1px solid #ccc;
+  max-height: 200px;
+  overflow-y: auto;
+  position: absolute;
+  z-index: 9999;
+  width: 300px;
+}
+
+.autocomplete-box div {
+  padding: 8px;
+  cursor: pointer;
+}
+
+.autocomplete-box div:hover {
+  background-color: #f0f0f0;
+}
