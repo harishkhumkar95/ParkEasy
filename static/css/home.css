@@ -1,161 +1,309 @@
-body {
-    font-family: 'Inter', sans-serif;
-    margin: 0;
-    padding: 0;
+ body {
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #e5e7eb;  /* ☁️ Tailwind's gray-200 ~ light ash-gray */
+  color: #111;
 }
 
-/* NAVBAR */
-.navbar {
-    display: flex;
-    justify-content: space-between;
-    padding: 20px 60px;
-    background-color: #fff;
-    align-items: center;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
-.logo {
-    font-size: 28px;
-    font-weight: bold;
-}
-.highlight {
-    color: #0066FF;
-}
-.nav-links {
-    list-style: none;
-    display: flex;
-    gap: 25px;
-}
-.nav-links li a {
-    text-decoration: none;
-    color: #333;
-    font-weight: 500;
-}
 
-.hero-section {
-  background-image: url('../images/parking-bg.png');
-  background-size: cover;
-  background-position: center;
-  height: 90vh;
-  color: white;
-  display: flex;
-  justify-content: center; /* center horizontally */
-  align-items: center;     /* center vertically */
-  text-align: center;
-  padding: 0 20px;
-}
-
-.hero-text.centered {
-  max-width: 700px;
-}
-
-.hero-text h1 {
-  font-size: 48px;
-  margin-bottom: 20px;
-}
-
-.hero-text p {
-  font-size: 18px;
-  margin-bottom: 30px;
-}
-
-.cta-button {
-  background-color: #0066FF;
-  color: white;
-  padding: 15px 30px;
+  /* NAVBAR */
+  .navbar {
+      display: flex;
+      justify-content: space-between;
+      padding: 20px 60px;
+      background-color:  #cbe471;
+      align-items: center;
+       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  }
+  .logo {
+  font-size: 50px;   /* or 40px if you want it larger */
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  }
+  .highlight {
+      color: #0066FF;
+  }
+  .nav-links {
+      list-style: none;
+      display: flex;
+      gap: 25px;
+  }
+ .nav-links li a {
   text-decoration: none;
-  font-weight: bold;
-  font-size: 16px;
-  border-radius: 5px;
-  transition: background-color 0.3s ease;
-}
-.cta-button:hover {
-  background-color: #004FCC;
+  color: #333;
+  font-weight: 500;
+  font-family: 'Poppins', sans-serif; /* or any other font you prefer */
+  font-size: 16px;                  /* increase or decrease as needed */
+  letter-spacing: 0.3px;            /* optional: adds spacing between letters */
+  text-transform: capitalize;       /* optional: makes first letter uppercase */
+  
 }
 
-/* SEARCH BAR */
-.search-bar {
-    margin-top: -60px;
-    background: white;
-    padding: 50px 100px;
+  .hero-section {
+    background-image: url('../images/');
+    background-size: cover;
+    background-position: center;
+    height: 00vh;
+    color: white;
     display: flex;
-    justify-content: center;
-    gap: 15px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-}
-.search-bar input, .search-bar select {
-    padding: 10px;
-    font-size: 16px;
-}
-.search-bar button {
+    justify-content: center; /* center horizontally */
+    align-items: center;     /* center vertically */
+    text-align: center;
+   padding: 120px 20px 0; /* 👈 top padding ensures visibility */
+  position: relative;
+  }
+
+  .hero-text.centered {
+    max-width: 700px;
+  }
+
+  .hero-text h1 {
+    font-size: 48px;
+    margin-bottom: 20px;
+  }
+
+  .hero-text p {
+    font-size: 18px;
+    margin-bottom: 30px;
+  }
+
+  .cta-button {
     background-color: #0066FF;
     color: white;
-    border: none;
-    padding: 10px 25px;
+    padding: 15px 30px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 16px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+  }
+  .cta-button:hover {
+    background-color: #004FCC;
+  }
+
+  /* SEARCH BAR */
+  .search-bar {
+      margin-top: -60px;
+      background: #cbe471;
+      padding: 30px 40px;
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  }
+  .search-bar input, .search-bar select {
+      padding: 10px;
+      font-size: 16px;
+  }
+  .search-bar button {
+      background-color: #0066FF;
+      color: white;
+      border: none;
+      padding: 10px 25px;
+      cursor: pointer;
+  }
+
+  .results {
+    background-color: whitesmoke;
+     margin: 10px auto 30px;  /* reduced top margin from 40px to 10px */
+     padding: 20px 25px; 
+    max-width: 700px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  .results h2 {
+    color: #0066FF;
+    margin-bottom: 15px;
+  }
+  .results ul {
+    list-style: none;
+    padding-left: 0;
+  }
+  .results li {
+    margin-bottom: 10px;
+    font-size: 16px;
+  }
+
+  .autocomplete-box {
+    background: white;
+    border: 1px solid #ccc;
+    max-height: 200px;
+    overflow-y: auto;
+    position: absolute;
+    z-index: 9999;
+    width: 300px;
+  }
+
+  .autocomplete-box div {
+    padding: 8px;
     cursor: pointer;
-}
+  }
 
-.results {
-  background-color: #fefefe;
-  margin: 40px auto;
-  padding: 30px 50px;
-  max-width: 700px;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
-}
-.results h2 {
-  color: #0066FF;
-  margin-bottom: 15px;
-}
-.results ul {
-  list-style: none;
-  padding-left: 0;
-}
-.results li {
-  margin-bottom: 10px;
-  font-size: 16px;
-}
+  .autocomplete-box div:hover {
+    background-color: #f0f0f0;
+  }
+  #filter-select {
+    margin-left: 10px;
+    padding: 6px;
+  }
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+  }
+  .modal-content {
+    background: white;
+    margin: 10% auto;
+    padding: 20px;
+    width: 300px;
+    border-radius: 8px;
+    text-align: center;
+  }
+  .close-btn {
+    float: right;
+    cursor: pointer;
+    font-size: 20px;
+  }
+  /* Ensure Leaflet popup adapts on mobile */
+  .leaflet-popup-content {
+    max-width: 250px !important;
+    font-size: 14px;
+    word-wrap: break-word;
+  }
 
-.autocomplete-box {
-  background: white;
+  /* Make buttons stack vertically on smaller screens */
+  .leaflet-popup-content button {
+    display: block;
+    width: 100%;
+    margin-bottom: 6px;
+    font-size: 14px;
+    padding: 8px;
+    border-radius: 6px;
+    background-color: #0066cc;
+    color: white;
+    border: none;
+  }
+
+  /* Prediction text style */
+  .prediction-result {
+    font-size: 13px;
+    padding: 4px 0;
+    text-align: center;
+  }
+
+  input, select {
   border: 1px solid #ccc;
-  max-height: 200px;
-  overflow-y: auto;
-  position: absolute;
-  z-index: 9999;
-  width: 300px;
+  border-radius: 6px;
 }
 
-.autocomplete-box div {
-  padding: 8px;
-  cursor: pointer;
+button {
+  border-radius: 6px;
 }
 
-.autocomplete-box div:hover {
-  background-color: #f0f0f0;
-}
-#filter-select {
-  margin-left: 10px;
-  padding: 6px;
-}
-.modal {
+/* Hamburger button (hidden on desktop) */
+.hamburger {
   display: none;
-  position: fixed;
-  z-index: 9999;
-  left: 0; top: 0;
-  width: 100%; height: 100%;
-  background: rgba(0, 0, 0, 0.6);
-}
-.modal-content {
-  background: white;
-  margin: 10% auto;
-  padding: 20px;
-  width: 300px;
-  border-radius: 8px;
-  text-align: center;
-}
-.close-btn {
-  float: right;
+  font-size: 24px;
+  background: none;
+  border: none;
   cursor: pointer;
-  font-size: 20px;
+}
+
+/* -------------------------------------------- */
+/* 📱 Responsive Adjustments for Mobile (<=768px) */
+/* -------------------------------------------- */
+/* 🌐 MOBILE STYLING */
+/* Mobile nav styles */
+@media (max-width: 768px) {
+  .navbar {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 10px 20px;
+  }
+
+  .hamburger {
+    display: block;
+    margin-left: auto;
+  }
+
+  .nav-links {
+    flex-direction: column;
+    width: 100%;
+    display: none;
+    margin-top: 10px;
+  }
+
+  .nav-links li {
+    margin: 10px 0;
+  }
+
+  .nav-links.show {
+    display: flex;
+  }
+}
+.main-footer {
+  background-color: #333;
+  color: white;
+  padding: 40px 20px;
+  font-size: 14px;
+}
+
+.footer-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto;
+  gap: 40px;
+}
+
+.footer-column {
+  flex: 1;
+  min-width: 180px;
+}
+
+.footer-logo {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.footer-column h4 {
+  margin-bottom: 12px;
+  color: #ccc;
+}
+
+.footer-column ul {
+  list-style: none;
+  padding: 0;
+}
+
+.footer-column li {
+  margin-bottom: 8px;
+}
+
+.footer-column a, .footer-column span {
+  color: white;
+  text-decoration: none;
+}
+
+.footer-column a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .footer-container {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0 20px;
+  }
+
+  .footer-column {
+    margin-bottom: 30px;
+  }
 }
 
