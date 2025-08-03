@@ -1,0 +1,57 @@
+<!-- templates/payment_success.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Payment Successful | ParkEasy</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+  <style>
+    .success-container {
+      max-width: 600px;
+      margin: 60px auto;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      background: #f9fff9;
+      text-align: center;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .success-container h1 {
+      color: green;
+    }
+
+    .success-container .tick {
+      font-size: 48px;
+      color: green;
+    }
+
+    .success-container p {
+      font-size: 18px;
+      margin-top: 20px;
+    }
+
+    .success-container a {
+      margin-top: 30px;
+      display: inline-block;
+      text-decoration: none;
+      background-color: #007bff;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+    }
+
+    .success-container a:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div class="success-container">
+    <div class="tick">✅</div>
+    <h1>Payment Successful</h1>
+    <p>Your booking has been confirmed and a receipt has been sent to your email.</p>
+    <a href="/">← Go back to home</a>
+  </div>
+</body>
+</html>
