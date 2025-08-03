@@ -26,11 +26,14 @@ load_dotenv()
 # Initialize Flask app and secret key
 # --------------------------------------------
 app = Flask(__name__)
-app.secret_key = 'p@rke@sy2025'
+app.secret_key = os.getenv("SECRET_KEY")
 # ✅ Flask-Mail Configuration
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = os.getenv("MAIL_USERNAME")
+app.config['MAIL_PASSWORD'] = os.getenv("MAIL_PASSWORD")
+app.config['MAIL_DEFAULT_SENDER'] = os.getenv("MAIL_DEFAULT_SENDER")
 
 
 mail = Mail(app)
@@ -47,6 +50,7 @@ PARKING_DATA = []
 csv_file_path = Path(__file__).parent / 'Dublin_City_Centre_Accessible_Parking_2021.csv'
 
 
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 
 # --------------------------------------------
 PARKING_DATA = []
@@ -92,7 +96,6 @@ else:
 # --------------------------------------------
 # MongoDB Atlas Configuration
 # --------------------------------------------
-#app.config['MONGO_URI'] = "mongodb+srv://harishkumkar2014:Harish12345@parkeasycluster.sjyzlz3.mongodb.net/ParkEasy?retryWrites=true&w=majority&appName=ParkEasyCluster"
 app.config['MONGO_URI'] = os.getenv("MONGO_URI")
 mongo = PyMongo(app)
 
