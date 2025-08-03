@@ -29,7 +29,6 @@
     <form action="/" method="POST">
 
       <select name="mode">
-
         <option value="all">Show All</option>
         <option value="available">Available Only</option>
         <option value="full">Full Only</option>
@@ -126,7 +125,8 @@
     <div class="modal-content">
       <span class="close-btn" onclick="document.getElementById('booking-modal').style.display='none'">&times;</span>
       <h3>Book Parking Spot</h3>
-      <form action="/book" method="POST">
+      <form action="/create-checkout-session" method="POST">
+
         <label>Your Name:</label>
         <input type="text" name="customer_name" required><br><br>
         <label>Location:</label>
@@ -152,6 +152,11 @@
       document.getElementById("booking-modal").style.display = "none";
     }
   </script>
+  <script>
+  window.selectedDate = "{{ date }}";
+  window.selectedTime = "{{ time }}";
+</script>
+
 
   <script src="{{ url_for('static', filename='js/search.js') }}"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
