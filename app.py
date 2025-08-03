@@ -12,7 +12,14 @@ from io import BytesIO
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from flask_pymongo import PyMongo
 import bcrypt
-
+import stripe
+import joblib
+from datetime import datetime
+import random
+from datetime import datetime
+from flask import request, jsonify
+from joblib import load
+ml_model = load("parking_model.pkl")
 # --------------------------------------------
 # Initialize Flask app and secret key
 # --------------------------------------------
@@ -22,11 +29,14 @@ app.secret_key = 'p@rke@sy2025'
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'harishkhumkar95@gmail.com'         # ⬅️ Your Gmail
-app.config['MAIL_PASSWORD'] = 'yiulkdccmaurooce'            # ⬅️ App Password (not your real Gmail password)
-app.config['MAIL_DEFAULT_SENDER'] = 'harishkumkar2014@gmail.com'   # ⬅️ Same as username
+
 
 mail = Mail(app)
+
+# Load trained ML model once
+MODEL_PATH = Path(__file__).parent / "parking_model.pkl"
+ml_model = joblib.load(MODEL_PATH)
+
 
 
 # --------------------------------------------
@@ -125,10 +135,7 @@ def home():
         all_spots=PARKING_DATA     # dropdown will use this
     )
 
-from datetime import datetime
 
-import random
-from datetime import datetime
 
 
 # @app.route('/test-email')
@@ -142,7 +149,30 @@ from datetime import datetime
 #         import traceback
 #         traceback.print_exc()
 #         return f"❌ Test email failed: {e}"
-    
+#----------------------------------------
+#predictive machine learning model 
+#----------------------------------------
+@app.route('/predict-availability', methods=['POST'])
+def predict_availability():
+    from flask import request, jsonify
+    from datetime import datetime
+    data = request.get_json()
+    try:
+        lat = float(data['lat'])
+        lon = float(data['lon'])
+        date = data['date']
+        time = data['time']
+
+        day = datetime.strptime(date, "%Y-%m-%d").weekday()
+        hour = int(time.split(":")[0])
+
+        prediction = ml_model.predict([[lat, lon, hour, day]])[0]
+        result = "Available" if prediction == 1 else "Full"
+
+        return jsonify({"prediction": result})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
 @app.route('/book', methods=['POST'])
 def book():
     customer_name = request.form.get('customer_name')
@@ -306,6 +336,139 @@ def admin_dashboard():
 
     return render_template('admin_dashboard.html', daily=daily_count, hourly=hourly_count)
 
+
+#Payment method
+@app.route('/create-checkout-session', methods=['POST'])
+def create_checkout_session():
+    try:
+        # Booking form data
+        customer_name = request.form.get('customer_name')
+        spot_name = request.form.get('spot_name')
+        date = request.form.get('date')
+        time = request.form.get('time')
+        hours = int(request.form.get('hours', 1))
+        user_email = session.get('email', 'guest')
+
+        total_price = hours * 2  # €2/hour
+
+        # ✅ Save data in session for later use
+        session['booking_temp'] = {
+            'customer_name': customer_name,
+            'spot_name': spot_name,
+            'date': date,
+            'time': time,
+            'hours': hours,
+            'email': user_email,
+            'total_price': total_price
+        }
+
+        stripe_session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            customer_email=user_email,
+            line_items=[{
+                'price_data': {
+                    'currency': 'eur',
+                    'unit_amount': total_price * 100,  # in cents
+                    'product_data': {
+                        'name': f'Parking at {spot_name}',
+                        'description': f'{hours}h on {date} at {time}'
+                    },
+                },
+                'quantity': 1,
+            }],
+            mode='payment',
+            success_url=url_for('payment_success', _external=True),
+            cancel_url=url_for('home', _external=True),
+        )
+
+        return redirect(stripe_session.url, code=303)
+
+    except Exception as e:
+        return str(e)
+
+    try:
+        # Get booking details from form
+        customer_name = request.form.get('customer_name')
+        spot_name = request.form.get('spot_name')
+        date = request.form.get('date')
+        time = request.form.get('time')
+        hours = int(request.form.get('hours', 1))
+        user_email = session.get('email', 'guest')
+
+        total_price = hours * 200  # €2/hour → in cents
+
+        session_stripe = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            customer_email=user_email,
+            line_items=[{
+                'price_data': {
+                    'currency': 'eur',
+                    'unit_amount': total_price,
+                    'product_data': {
+                        'name': f'Parking at {spot_name}',
+                        'description': f'{hours} hour(s) on {date} at {time}'
+                    },
+                },
+                'quantity': 1,
+            }],
+            mode='payment',
+            success_url=url_for('payment_success', _external=True),
+            cancel_url=url_for('home', _external=True),
+        )
+
+        return redirect(session_stripe.url, code=303)
+
+    except Exception as e:
+        return str(e)
+#payment succses route
+@app.route('/payment-success')
+def payment_success():
+    booking = session.get('booking_temp')
+    if not booking:
+        return "❌ No booking data found. Please try again.", 400
+
+    # Generate ticket
+    ticket_number = f"TKT{datetime.now().strftime('%H%M%S')}{random.randint(100, 999)}"
+
+    # Save to MongoDB
+    mongo.db.bookings.insert_one({
+        'ticket_number': ticket_number,
+        'customer_name': booking['customer_name'],
+        'user': booking['email'],
+        'spot_name': booking['spot_name'],
+        'date': booking['date'],
+        'time': booking['time'],
+        'duration_hours': booking['hours'],
+        'total_price_eur': booking['total_price'],
+        'status': 'confirmed',
+        'timestamp': datetime.utcnow()
+    })
+
+    # ✅ Send confirmation email (optional reuse)
+    try:
+        msg = Message(f"Your ParkEasy Booking: {ticket_number}", recipients=[booking['email']])
+        msg.body = f"""
+Hi {booking['customer_name']},
+
+Your parking booking is confirmed!
+
+📍 Spot: {booking['spot_name']}
+📅 Date: {booking['date']}
+⏰ Time: {booking['time']}
+⏳ Duration: {booking['hours']} hour(s)
+🎫 Ticket No: {ticket_number}
+💶 Total: €{booking['total_price']}
+
+Thank you for using ParkEasy!
+        """
+        mail.send(msg)
+    except Exception as e:
+        print("❌ Email send failed:", e)
+
+    # Clear session data
+    session.pop('booking_temp', None)
+
+    return render_template('payment_success.html')
 
 # --------------------------------------------
 # API Endpoint: Return all matched parking data (for Leaflet map)
