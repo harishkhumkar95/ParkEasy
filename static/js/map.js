@@ -1,44 +1,5 @@
-// document.addEventListener("DOMContentLoaded", function () {
-//   if (typeof parkingResults === "undefined" || parkingResults.length === 0) {
-//     console.warn("⚠️ No parkingResults available.");
-//     return;
-//   }
-
-//   console.log("✅ Map JS loaded");
-//   console.log("📦 parkingResults:", parkingResults);
-
-//   const mapContainer = document.createElement("div");
-//   mapContainer.id = "map";
-//   mapContainer.style.height = "500px";
-//   mapContainer.style.marginTop = "20px";
-
-//   const attachPoint = document.querySelector(".results") || document.querySelector(".search-bar");
-//   attachPoint.appendChild(mapContainer);
-
-//   const map = L.map("map").setView([53.3498, -6.2603], 13);
-//   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-//     maxZoom: 19,
-//   }).addTo(map);
-
-//   let markerCount = 0;
-
-//   parkingResults.forEach((spot) => {
-//     if (spot.lat && spot.lon) {
-//       markerCount++;
-//       const marker = L.marker([spot.lat, spot.lon]).addTo(map);
-//       marker.bindPopup(
-//         `<strong>${spot.spot_name}</strong><br>
-//          Availability: ${spot.availability}<br>
-//          Lat: ${spot.lat}, Lon: ${spot.lon}`
-//       );
-//     }
-//   });
-
-//   console.log(`📍 Rendered ${markerCount} parking markers`);
-// });
 
 document.addEventListener("DOMContentLoaded", function () {
-  // ✅ Read from the <script type="application/json"> blocks
   const resultsTag = document.getElementById("parking-data");
   const parkingResults = resultsTag ? JSON.parse(resultsTag.textContent) : [];
 
@@ -49,7 +10,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   console.log("📦 Loaded parkingResults:", parkingResults);
 
-  // ✅ Insert map container dynamically
   const mapContainer = document.createElement("div");
   mapContainer.id = "map";
   mapContainer.style.height = "400px";
@@ -58,13 +18,9 @@ document.addEventListener("DOMContentLoaded", function () {
   const attachPoint = document.querySelector(".results") || document.querySelector(".search-bar");
   attachPoint.appendChild(mapContainer);
 
-  // ✅ Initialize Leaflet map
   const map = L.map("map");
-
-  // Default fallback view
   map.setView([53.35, -6.26], 12);
 
-  // If there’s at least one valid result, center on it
   if (parkingResults.length > 0 && parkingResults[0].lat && parkingResults[0].lon) {
     map.setView([parkingResults[0].lat, parkingResults[0].lon], 14);
   }
@@ -75,9 +31,6 @@ document.addEventListener("DOMContentLoaded", function () {
   let markerCount = 0;
   const filterSelect = document.getElementById("filter-select");
 
-
-  // ✅ Add markers
-  // ✅ Add markers with filter logic
   parkingResults.forEach((spot) => {
     const avail = parseInt(spot.availability);
 
@@ -90,46 +43,80 @@ document.addEventListener("DOMContentLoaded", function () {
     if (spot.lat && spot.lon) {
       markerCount++;
       const marker = L.marker([spot.lat, spot.lon]).addTo(map);
-      // marker.bindPopup(`
-      //   <strong>${spot.spot_name}</strong><br>
-      //   Availability: ${spot.availability}<br>
-      //   Lat: ${spot.lat}, Lon: ${spot.lon}
-      // `);
       marker.bindPopup(`
-  <strong>${spot.spot_name}</strong><br>
-  Availability: ${spot.availability}<br>
-  Lat: ${spot.lat}, Lon: ${spot.lon}<br>
-  <button class="book-now-btn" data-name="${spot.spot_name}" data-lat="${spot.lat}" data-lon="${spot.lon}">
-    Book Now
-  </button>
-`);
+        <strong>${spot.spot_name}</strong><br>
+        Availability: ${spot.availability}<br>
+        Lat: ${spot.lat}, Lon: ${spot.lon}<br><br>
 
+        <button class="predict-btn" 
+          data-lat="${spot.lat}" 
+          data-lon="${spot.lon}">
+          🔮 Predict Availability
+        </button><br><br>
+
+        <button class="book-now-btn" 
+          data-name="${spot.spot_name}" 
+          data-lat="${spot.lat}" 
+          data-lon="${spot.lon}">
+          Book Now
+        </button>
+      `);
     }
   });
 
-  // ✅ Refresh map on filter change
   if (filterSelect) {
     filterSelect.addEventListener("change", () => {
-      location.reload();  // Simple refresh for now — can optimize later
+      location.reload();
     });
   }
 
   console.log(`📍 Rendered ${markerCount} parking markers`);
+
   document.addEventListener("click", function (e) {
     if (e.target.classList.contains("book-now-btn")) {
       const name = e.target.getAttribute("data-name");
-      const lat = e.target.getAttribute("data-lat");
-      const lon = e.target.getAttribute("data-lon");
-
       document.getElementById("booking-spot-name").value = name;
       document.getElementById("booking-modal").style.display = "block";
     }
+
+    if (e.target && e.target.classList.contains("predict-btn")) {
+      const lat = e.target.getAttribute("data-lat");
+      const lon = e.target.getAttribute("data-lon");
+
+      const selectedDate = document.querySelector('input[name="date"]')?.value;
+      const selectedTime = document.querySelector('input[name="time"]')?.value;
+
+      if (!selectedDate || !selectedTime) {
+        alert("⚠️ Please select a date and time before predicting.");
+        return;
+      }
+
+      fetch("/predict-availability", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          lat: lat,
+          lon: lon,
+          date: selectedDate,
+          time: selectedTime
+        })
+      })
+      .then(res => {
+        if (!res.ok) throw new Error("Server error " + res.status);
+        return res.json();
+      })
+      .then(data => {
+        if (data.prediction !== undefined) {
+          alert("✅ Predicted availability: " + data.prediction);
+        } else {
+          alert("⚠️ Prediction failed: " + JSON.stringify(data));
+        }
+      })
+      .catch(err => {
+        alert("❌ Prediction failed: " + err);
+      });
+    }
   });
-
 });
-static / js / map.js
-static / js / map.js
-
-
-
-
