@@ -9,20 +9,26 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
 </head>
 
 <body>
   <nav class="navbar">
     <div class="logo">Park<span class="highlight">Easy</span></div>
-    <ul class="nav-links">
-    <li><a href="/">Home</a></li>
-    <li><a href="#about">About</a></li>
-    <li><a href="#contact">Contact</a></li>
-    <li><a href="/my-bookings">🗂 Booking History</a></li>
-    <li><a href="/admin-dashboard">📉 Admin Panel</a></li>
-    <li><a href="/logout">Logout</a></li>
+    <button class="hamburger" id="menu-toggle">&#9776;</button>
+    <ul class="nav-links" id="nav-menu">
+      <li><a href="/">Home</a></li>
+      <li><a href="#about" onclick="toggleFooterSection('about')">About</a></li>
+      <li><a href="#contact" onclick="toggleFooterSection('contact')">Contact</a></li>
+
+      <li><a href="/my-bookings">Booking History</a></li>
+      <li><a href="/admin-dashboard">Admin Panel</a></li>
+      <li><a href="/logout">Logout</a></li>
     </ul>
   </nav>
+  
+
 
   <!-- SEARCH -->
   <section class="search-bar">
@@ -67,29 +73,79 @@
   {% endif %}
 
 
-  <header class="hero-section">
+  <!-- <header class="hero-section">
     <div class="hero-text centered">
       <h1>Find Amazing Parking Space Near You</h1>
       <p>Book your slot easily with real-time data prediction in Dublin.</p>
       <a href="#" class="cta-button">Show Parking Spaces</a>
     </div>
-  </header>
+  </header> -->
 
-  <section class="info-section" id="about">
+  <!-- <section class="info-section" id="about">
     <h4>About Us</h4>
     <p>ParkEasy is a smart parking web application helping users in Dublin to locate and book parking spaces with ease
       using real-time data and prediction models.</p>
-  </section>
-
+  </section> -->
+<!-- 
   <section class="info-section" id="contact">
     <h4>Contact</h4>
     <p>Email: support@parkeasy.com</p>
     <p>Phone: +353 123 456 789</p>
-  </section>
+  </section> -->
 
-  <footer class="footer">
-    <p>© 2025 ParkEasy | All Rights Reserved</p>
+  <footer class="main-footer">
+    <div class="footer-container">
+      <div class="footer-column">
+        <h3 class="footer-logo">Park<span class="highlight">Easy</span></h3>
+        <p>© 2025 ParkEasy. All rights reserved.</p>
+      </div>
+
+      <!-- About Section (Hidden Initially) -->
+      <div class="footer-column toggle-section" id="about-footer" style="display: none;">
+        <h4>About Us</h4>
+        <p style="color:#ccc;">ParkEasy is a smart parking web application helping users in Dublin to locate and book
+          parking spaces with ease using real-time data and prediction models.</p>
+      </div>
+
+      <!-- Contact Section (Hidden Initially) -->
+      <div class="footer-column toggle-section" id="contact-footer" style="display: none;">
+        <h4>Contact</h4>
+        <p>Email: support@parkeasy.com</p>
+        <p>Phone: +353 123 456 789</p>
+      </div>
+
+      <div class="footer-column">
+        <h4>APPS</h4>
+        <ul>
+          <li><span>📱 Android</span></li>
+          <li><span>🍎 iOS</span></li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h4>FOLLOW US</h4>
+        <ul>
+          <li><span>📘 Facebook</span></li>
+          <li><span>🐦 Twitter</span></li>
+          <li><span>📺 YouTube</span></li>
+          <li><span>📌 Pinterest</span></li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h4>COMPANY</h4>
+        <ul>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Advertise</a></li>
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Use</a></li>
+        </ul>
+      </div>
+    </div>
   </footer>
+
+
+
 
   <!-- ✅ Fix JS variables correctly -->
   <script id="parking-data" type="application/json">
@@ -153,12 +209,42 @@
     }
   </script>
   <script>
-  window.selectedDate = "{{ date }}";
-  window.selectedTime = "{{ time }}";
-</script>
+    window.selectedDate = "{{ date }}";
+    window.selectedTime = "{{ time }}";
+  </script>
 
 
   <script src="{{ url_for('static', filename='js/search.js') }}"></script>
+  <script>
+    document.getElementById('hamburger').addEventListener('click', () => {
+      document.getElementById('nav-links').classList.toggle('show');
+    });
+  </script>
+  <script>
+    document.getElementById('menu-toggle').addEventListener('click', function () {
+      document.getElementById('nav-menu').classList.toggle('show');
+    });
+  </script>
+  <script>
+  function toggleFooterSection(section) {
+    const about = document.getElementById("about-footer");
+    const contact = document.getElementById("contact-footer");
+
+    if (section === "about") {
+      about.style.display = about.style.display === "none" ? "block" : "none";
+      contact.style.display = "none";
+    }
+
+    if (section === "contact") {
+      contact.style.display = contact.style.display === "none" ? "block" : "none";
+      about.style.display = "none";
+    }
+
+    // Scroll to footer
+    document.querySelector(".main-footer").scrollIntoView({ behavior: "smooth" });
+  }
+</script>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="{{ url_for('static', filename='js/map.js') }}"></script>
 </body>
