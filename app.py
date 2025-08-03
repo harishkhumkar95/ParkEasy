@@ -20,6 +20,8 @@ from datetime import datetime
 from flask import request, jsonify
 from joblib import load
 ml_model = load("parking_model.pkl")
+from dotenv import load_dotenv
+load_dotenv() 
 # --------------------------------------------
 # Initialize Flask app and secret key
 # --------------------------------------------
@@ -36,7 +38,6 @@ mail = Mail(app)
 # Load trained ML model once
 MODEL_PATH = Path(__file__).parent / "parking_model.pkl"
 ml_model = joblib.load(MODEL_PATH)
-
 
 
 # --------------------------------------------
@@ -91,7 +92,8 @@ else:
 # --------------------------------------------
 # MongoDB Atlas Configuration
 # --------------------------------------------
-app.config['MONGO_URI'] = "mongodb+srv://harishkumkar2014:Harish12345@parkeasycluster.sjyzlz3.mongodb.net/ParkEasy?retryWrites=true&w=majority&appName=ParkEasyCluster"
+#app.config['MONGO_URI'] = "mongodb+srv://harishkumkar2014:Harish12345@parkeasycluster.sjyzlz3.mongodb.net/ParkEasy?retryWrites=true&w=majority&appName=ParkEasyCluster"
+app.config['MONGO_URI'] = os.getenv("MONGO_URI")
 mongo = PyMongo(app)
 
 # --------------------------------------------
