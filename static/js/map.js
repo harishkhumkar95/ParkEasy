@@ -1,4 +1,3 @@
-
 document.addEventListener("DOMContentLoaded", function () {
   const resultsTag = document.getElementById("parking-data");
   const parkingResults = resultsTag ? JSON.parse(resultsTag.textContent) : [];
@@ -24,6 +23,7 @@ document.addEventListener("DOMContentLoaded", function () {
   if (parkingResults.length > 0 && parkingResults[0].lat && parkingResults[0].lon) {
     map.setView([parkingResults[0].lat, parkingResults[0].lon], 14);
   }
+
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
   }).addTo(map);
@@ -43,80 +43,98 @@ document.addEventListener("DOMContentLoaded", function () {
     if (spot.lat && spot.lon) {
       markerCount++;
       const marker = L.marker([spot.lat, spot.lon]).addTo(map);
-      marker.bindPopup(`
-        <strong>${spot.spot_name}</strong><br>
-        Availability: ${spot.availability}<br>
-        Lat: ${spot.lat}, Lon: ${spot.lon}<br><br>
 
-        <button class="predict-btn" 
-          data-lat="${spot.lat}" 
-          data-lon="${spot.lon}">
-          🔮 Predict Availability
-        </button><br><br>
+ marker.bindPopup(`
+  <strong>${spot.spot_name}</strong><br>
+  Availability: ${spot.availability}<br>
+  Lat: ${spot.lat}, Lon: ${spot.lon}<br><br>
 
-        <button class="book-now-btn" 
-          data-name="${spot.spot_name}" 
-          data-lat="${spot.lat}" 
-          data-lon="${spot.lon}">
-          Book Now
-        </button>
-      `);
+  <button class="predict-btn" 
+    data-lat="${spot.lat}" 
+    data-lon="${spot.lon}">
+    🔮 Predict Availability
+  </button>
+
+  <div class="prediction-result"></div>  <!-- ✅ Now just below the prediction button -->
+
+  <br>
+  <button class="book-now-btn" 
+    data-name="${spot.spot_name}" 
+    data-lat="${spot.lat}" 
+    data-lon="${spot.lon}">
+    Book Now
+  </button>
+`);
+
+
+
     }
   });
 
   if (filterSelect) {
     filterSelect.addEventListener("change", () => {
-      location.reload();
+      location.reload(); // Simple reload for filter
     });
   }
 
   console.log(`📍 Rendered ${markerCount} parking markers`);
 
-  document.addEventListener("click", function (e) {
-    if (e.target.classList.contains("book-now-btn")) {
-      const name = e.target.getAttribute("data-name");
-      document.getElementById("booking-spot-name").value = name;
-      document.getElementById("booking-modal").style.display = "block";
+ document.addEventListener("click", function (e) {
+  if (e.target.classList.contains("book-now-btn")) {
+   
+     const name = e.target.getAttribute("data-name");
+    const lat = e.target.getAttribute("data-lat");
+    const lon = e.target.getAttribute("data-lon");
+
+    document.getElementById("booking-spot-name").value = name;
+    document.getElementById("booking-modal").style.display = "block";
+  }
+
+  if (e.target && e.target.classList.contains("predict-btn")) {
+    const lat = e.target.getAttribute("data-lat");
+    const lon = e.target.getAttribute("data-lon");
+
+    const date = window.selectedDate;
+    const time = window.selectedTime;
+
+    if (!date || !time) {
+      alert("⚠️ Please select a date and time before predicting.");
+      return;
     }
 
-    if (e.target && e.target.classList.contains("predict-btn")) {
-      const lat = e.target.getAttribute("data-lat");
-      const lon = e.target.getAttribute("data-lon");
+    const button = e.target;
+    const popup = button.closest(".leaflet-popup-content");
+    const resultDiv = popup.querySelector(".prediction-result");
 
-      const selectedDate = document.querySelector('input[name="date"]')?.value;
-      const selectedTime = document.querySelector('input[name="time"]')?.value;
+    resultDiv.textContent = "⏳ Predicting...";
 
-      if (!selectedDate || !selectedTime) {
-        alert("⚠️ Please select a date and time before predicting.");
-        return;
-      }
-
-      fetch("/predict-availability", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          lat: lat,
-          lon: lon,
-          date: selectedDate,
-          time: selectedTime
-        })
+    fetch("/predict-availability", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        lat: parseFloat(lat),
+        lon: parseFloat(lon),
+        date: date,
+        time: time
       })
+    })
       .then(res => {
         if (!res.ok) throw new Error("Server error " + res.status);
         return res.json();
       })
       .then(data => {
         if (data.prediction !== undefined) {
-          alert("✅ Predicted availability: " + data.prediction);
+          resultDiv.textContent = `✅ Predicted: ${data.prediction}`;
         } else {
-          alert("⚠️ Prediction failed: " + JSON.stringify(data));
+          resultDiv.textContent = "⚠️ Prediction failed.";
         }
       })
       .catch(err => {
-        alert("❌ Prediction failed: " + err);
+        resultDiv.textContent = "❌ Prediction error.";
       });
-    }
-  });
+  }
+});
+
 });
