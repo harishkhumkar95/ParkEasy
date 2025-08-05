@@ -44,7 +44,7 @@ document.addEventListener("DOMContentLoaded", function () {
       markerCount++;
       const marker = L.marker([spot.lat, spot.lon]).addTo(map);
 
- marker.bindPopup(`
+      marker.bindPopup(`
   <strong>${spot.spot_name}</strong><br>
   Availability: ${spot.availability}<br>
   Lat: ${spot.lat}, Lon: ${spot.lon}<br><br>
@@ -58,7 +58,7 @@ document.addEventListener("DOMContentLoaded", function () {
   <div class="prediction-result"></div>  <!-- ✅ Now just below the prediction button -->
 
   <br>
-  <button class="book-now-btn" 
+  <button class="book-now-btn" disabled style="opacity: 0.5; cursor: not-allowed;"
     data-name="${spot.spot_name}" 
     data-lat="${spot.lat}" 
     data-lon="${spot.lon}">
@@ -79,62 +79,76 @@ document.addEventListener("DOMContentLoaded", function () {
 
   console.log(`📍 Rendered ${markerCount} parking markers`);
 
- document.addEventListener("click", function (e) {
-  if (e.target.classList.contains("book-now-btn")) {
-   
-     const name = e.target.getAttribute("data-name");
-    const lat = e.target.getAttribute("data-lat");
-    const lon = e.target.getAttribute("data-lon");
+  document.addEventListener("click", function (e) {
+    if (e.target.classList.contains("book-now-btn")) {
 
-    document.getElementById("booking-spot-name").value = name;
-    document.getElementById("booking-modal").style.display = "block";
-  }
+      const name = e.target.getAttribute("data-name");
+      const lat = e.target.getAttribute("data-lat");
+      const lon = e.target.getAttribute("data-lon");
 
-  if (e.target && e.target.classList.contains("predict-btn")) {
-    const lat = e.target.getAttribute("data-lat");
-    const lon = e.target.getAttribute("data-lon");
-
-    const date = window.selectedDate;
-    const time = window.selectedTime;
-
-    if (!date || !time) {
-      alert("⚠️ Please select a date and time before predicting.");
-      return;
+      document.getElementById("booking-spot-name").value = name;
+      document.getElementById("booking-modal").style.display = "block";
     }
 
-    const button = e.target;
-    const popup = button.closest(".leaflet-popup-content");
-    const resultDiv = popup.querySelector(".prediction-result");
+    if (e.target && e.target.classList.contains("predict-btn")) {
+      const lat = e.target.getAttribute("data-lat");
+      const lon = e.target.getAttribute("data-lon");
 
-    resultDiv.textContent = "⏳ Predicting...";
+      const date = window.selectedDate;
+      const time = window.selectedTime;
 
-    fetch("/predict-availability", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        lat: parseFloat(lat),
-        lon: parseFloat(lon),
-        date: date,
-        time: time
+      if (!date || !time) {
+        alert("⚠️ Please select a date and time before predicting.");
+        return;
+      }
+
+      const button = e.target;
+      const popup = button.closest(".leaflet-popup-content");
+      const resultDiv = popup.querySelector(".prediction-result");
+
+      resultDiv.textContent = "⏳ Predicting...";
+
+      fetch("/predict-availability", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          lat: parseFloat(lat),
+          lon: parseFloat(lon),
+          date: date,
+          time: time
+        })
       })
-    })
-      .then(res => {
-        if (!res.ok) throw new Error("Server error " + res.status);
-        return res.json();
-      })
-      .then(data => {
-        if (data.prediction !== undefined) {
-          resultDiv.textContent = `✅ Predicted: ${data.prediction}`;
-        } else {
-          resultDiv.textContent = "⚠️ Prediction failed.";
-        }
-      })
-      .catch(err => {
-        resultDiv.textContent = "❌ Prediction error.";
-      });
-  }
-});
+        .then(res => {
+          if (!res.ok) throw new Error("Server error " + res.status);
+          return res.json();
+        })
+        .then(data => {
+          if (data.prediction !== undefined) {
+            const bookBtn = popup.querySelector(".book-now-btn");
+
+            resultDiv.textContent = `✅ Predicted: ${data.prediction}`;
+
+            if (data.prediction === "Available") {
+              bookBtn.disabled = false;
+              bookBtn.style.opacity = "1";
+              bookBtn.style.cursor = "pointer";
+            } else {
+              bookBtn.disabled = true;
+              bookBtn.style.opacity = "0.5";
+              bookBtn.style.cursor = "not-allowed";
+              resultDiv.innerHTML += `<br><span style="color:red;">❌ Booking disabled. Spot is full.</span>`;
+            }
+          } else {
+            resultDiv.textContent = "⚠️ Prediction failed.";
+          }
+        })
+
+        .catch(err => {
+          resultDiv.textContent = "❌ Prediction error.";
+        });
+    }
+  });
 
 });
