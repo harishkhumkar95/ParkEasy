@@ -2,6 +2,7 @@
 # Author: Harish Khumkar
 # Description: Flask backend for ParkEasy app (handles registration, login, session, MongoDB, and parking data search)
 # Last updated: 31-07-2025
+#.\venv\Scripts\Activate
 
 import csv
 import os
