@@ -45,11 +45,11 @@ MODEL_PATH = Path(__file__).parent / "parking_model.pkl"
 ml_model = joblib.load(MODEL_PATH)
 
 
-# --------------------------------------------
-# Load Parking Data into memory (lat/lon ready)
-# --------------------------------------------
-PARKING_DATA = []
-csv_file_path = Path(__file__).parent / 'Dublin_City_Centre_Accessible_Parking_2021.csv'
+# # --------------------------------------------
+# # Load Parking Data into memory (lat/lon ready)
+# # --------------------------------------------
+# PARKING_DATA = []
+# csv_file_path = Path(__file__).parent / 'Dublin_City_Centre_Accessible_Parking_2021.csv'
 
 #To get remote acces to the payment system
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
