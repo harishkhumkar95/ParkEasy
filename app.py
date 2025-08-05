@@ -23,6 +23,7 @@ from joblib import load
 ml_model = load("parking_model.pkl")
 from dotenv import load_dotenv
 load_dotenv() 
+
 # --------------------------------------------
 # Initialize Flask app and secret key
 # --------------------------------------------
@@ -50,7 +51,7 @@ ml_model = joblib.load(MODEL_PATH)
 PARKING_DATA = []
 csv_file_path = Path(__file__).parent / 'Dublin_City_Centre_Accessible_Parking_2021.csv'
 
-
+#To get remote acces to the payment system
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 
 # --------------------------------------------
@@ -143,6 +144,30 @@ def home():
 
 
 
+@app.route('/api/filtered-status', methods=['POST'])
+def filtered_status():
+    try:
+        coords = request.json.get('coordinates', [])
+        updates = []
+
+        for coord in coords:
+            lat = coord.get("lat")
+            lon = coord.get("lon")
+
+            spot = mongo.db.parking_spots.find_one({
+                "latitude": lat,
+                "longitude": lon
+            }, {"_id": 0})
+
+            if spot:
+                updates.append(spot)
+
+        return jsonify(updates)
+
+    except Exception as e:
+        print("❌ filtered_status error:", e)
+        return jsonify({"error": str(e)}), 500
+
 
 # @app.route('/test-email')
 # def test_email():
@@ -155,6 +180,15 @@ def home():
 #         import traceback
 #         traceback.print_exc()
 #         return f"❌ Test email failed: {e}"
+
+@app.route('/api/parking')
+def get_parking_data():
+    data = list(collection.find({}, {"_id": 0}))
+    return jsonify(data)
+
+
+
+
 #----------------------------------------
 #predictive machine learning model 
 #----------------------------------------
