@@ -138,7 +138,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const lon = e.target.getAttribute("data-lon");
 
       document.getElementById("booking-spot-name").value = name;
-      document.getElementById("booking-spot-location").value = name;
+      // document.getElementById("booking-spot-location").value = name;
       document.getElementById("booking-modal").style.display = "block";
     }
 
