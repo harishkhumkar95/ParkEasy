@@ -1,3 +1,55 @@
+
+function createPopupHTML(spot) {
+  const lat = spot.lat;
+  const lon = spot.lon;
+  const avail = spot.availability || spot.status || "N/A";
+
+  // Show emoji + label
+  let statusBadge = "";
+  if (avail === "0" || avail === "occupied" || avail === 0) {
+    statusBadge = `<span style="color:red;">🔴 Spot Full</span>`;
+  } else {
+    statusBadge = `<span style="color:green;">✅ Spot Available</span>`;
+  }
+
+  return `
+    <strong>${spot.spot_name}</strong><br>
+    Availability: ${avail} ${statusBadge}<br>
+    Lat: ${lat}, Lon: ${lon}<br><br>
+
+    <button class="predict-btn" 
+      data-lat="${lat}" 
+      data-lon="${lon}">
+      🔮 Predict Availability
+    </button>
+
+    <div class="prediction-result"></div><br>
+
+    <button class="book-now-btn" disabled style="opacity: 0.5; cursor: not-allowed;"
+      data-name="${spot.spot_name}" 
+      data-lat="${lat}" 
+      data-lon="${lon}">
+      Book Now
+    </button>
+  `;
+}
+
+
+
+const greenIcon = new L.Icon({
+  iconUrl: 'https://maps.gstatic.com/mapfiles/ms2/micons/green-dot.png',
+  iconSize: [32, 32],
+  iconAnchor: [16, 32],
+  popupAnchor: [0, -30]
+});
+
+const redIcon = new L.Icon({
+  iconUrl: 'https://maps.gstatic.com/mapfiles/ms2/micons/red-dot.png',
+  iconSize: [32, 32],
+  iconAnchor: [16, 32],
+  popupAnchor: [0, -30]
+});
+
 document.addEventListener("DOMContentLoaded", function () {
   const resultsTag = document.getElementById("parking-data");
   const parkingResults = resultsTag ? JSON.parse(resultsTag.textContent) : [];
@@ -24,15 +76,33 @@ document.addEventListener("DOMContentLoaded", function () {
     map.setView([parkingResults[0].lat, parkingResults[0].lon], 14);
   }
 
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
     maxZoom: 19,
+    attribution: '&copy; <a href="https://carto.com/">CARTO</a>'
   }).addTo(map);
+
 
   let markerCount = 0;
   const filterSelect = document.getElementById("filter-select");
+  if (filterSelect) {
+    filterSelect.addEventListener("change", () => {
+      location.reload();
+    });
+  }
+
+
+  const markerMap = {}; // 🔁 Add this just before forEach loop
 
   parkingResults.forEach((spot) => {
+    // const lat = spot.lat;
+    // const lon = spot.lon;
+    const name = spot.spot_name;
+    const lat = parseFloat(spot.lat);
+    const lon = parseFloat(spot.lon);
+    const key = `${lat}_${lon}`;
+
     const avail = parseInt(spot.availability);
+
 
     if (filterSelect) {
       const selected = filterSelect.value;
@@ -43,28 +113,9 @@ document.addEventListener("DOMContentLoaded", function () {
     if (spot.lat && spot.lon) {
       markerCount++;
       const marker = L.marker([spot.lat, spot.lon]).addTo(map);
+      markerMap[key] = marker // ✅ Save each spot to markerMap by key
 
-      marker.bindPopup(`
-  <strong>${spot.spot_name}</strong><br>
-  Availability: ${spot.availability}<br>
-  Lat: ${spot.lat}, Lon: ${spot.lon}<br><br>
-
-  <button class="predict-btn" 
-    data-lat="${spot.lat}" 
-    data-lon="${spot.lon}">
-    🔮 Predict Availability
-  </button>
-
-  <div class="prediction-result"></div>  <!-- ✅ Now just below the prediction button -->
-
-  <br>
-  <button class="book-now-btn" disabled style="opacity: 0.5; cursor: not-allowed;"
-    data-name="${spot.spot_name}" 
-    data-lat="${spot.lat}" 
-    data-lon="${spot.lon}">
-    Book Now
-  </button>
-`);
+      marker.bindPopup(createPopupHTML(spot));
 
 
 
@@ -87,6 +138,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const lon = e.target.getAttribute("data-lon");
 
       document.getElementById("booking-spot-name").value = name;
+      document.getElementById("booking-spot-location").value = name;
       document.getElementById("booking-modal").style.display = "block";
     }
 
@@ -150,5 +202,54 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
   });
+
+
+  setInterval(() => {
+    const coordinates = Object.keys(markerMap).map(key => {
+      const [lat, lon] = key.split("_");
+      return { lat: parseFloat(lat), lon: parseFloat(lon) };
+    });
+
+    fetch("/api/filtered-status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ coordinates })
+    })
+      .then(res => res.json())
+      .then(updatedSpots => {
+        updatedSpots.forEach(spot => {
+          const key = `${spot.latitude}_${spot.longitude}`;
+          const marker = markerMap[key];
+
+          if (marker) {
+            const original = parkingResults.find(s =>
+              parseFloat(s.lat).toFixed(4) == parseFloat(spot.latitude).toFixed(4) &&
+              parseFloat(s.lon).toFixed(4) == parseFloat(spot.longitude).toFixed(4)
+            );
+
+            const newHTML = createPopupHTML({
+              ...spot,
+              lat: spot.latitude,
+              lon: spot.longitude,
+              spot_name: original ? original.spot_name : "Unknown"
+            });
+
+            const popup = marker.getPopup();
+            if (popup && map.hasLayer(popup)) {
+              popup.setContent(`<div>⏳ Checking availability...</div>`);
+            }
+
+            if (popup && map.hasLayer(popup)) {
+              popup.setContent(newHTML); // live update if popup is open
+            } else {
+              marker.bindPopup(newHTML); // update for next open
+            }
+          }
+
+        });
+      })
+      .catch(err => console.error("🔴 Error updating filtered markers:", err));
+  }, 15000);
+
 
 });
